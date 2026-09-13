@@ -2,8 +2,10 @@ import { FormEvent, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, errorMessage } from '../../lib/api';
 
-type Mood = 'HAPPY' | 'CALM' | 'EXCITED' | 'TIRED' | 'SAD' | 'STRESSED';
-type MoodEntry = { id: string; mood: Mood; note: string | null; entryDate: string; createdAt: string };
+import { MoodAnalytics } from './mood-analytics';
+
+export type Mood = 'HAPPY' | 'CALM' | 'EXCITED' | 'TIRED' | 'SAD' | 'STRESSED';
+export type MoodEntry = { id: string; mood: Mood; note: string | null; entryDate: string; createdAt: string };
 type Garden = {
   level: number; experience: number; theme: string; streak: { current: number; longest: number };
   progress: { current: number; target: number; nextLevelAt: number };
@@ -56,6 +58,7 @@ export function MoodPage() {
       <button className="button" disabled={busy}>{busy ? 'Đang gieo hạt mầm…' : 'Lưu cảm xúc hôm nay'}</button>
     </form>}
     <MoodHistory entries={history.data ?? []} />
+    <MoodAnalytics entries={history.data ?? []} />
   </section>;
 }
 function CheckedIn({ entry }: { entry: MoodEntry }) {

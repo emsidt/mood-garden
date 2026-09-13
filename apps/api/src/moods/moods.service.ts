@@ -17,7 +17,7 @@ export class MoodsService {
     const preference = await this.prisma.userPreference.findUniqueOrThrow({ where: { userId } });
     return this.prisma.moodEntry.findUnique({ where: { userId_entryDate: { userId, entryDate: dateInTimezone(preference.timezone) } } });
   }
-  history(userId: string) { return this.prisma.moodEntry.findMany({ where: { userId }, orderBy: { entryDate: 'desc' }, take: 60, select: { id: true, mood: true, note: true, entryDate: true, createdAt: true } }); }
+  history(userId: string) { return this.prisma.moodEntry.findMany({ where: { userId }, orderBy: { entryDate: 'desc' }, take: 92, select: { id: true, mood: true, note: true, entryDate: true, createdAt: true } }); }
   async statistics(userId: string) {
     const entries = await this.prisma.moodEntry.findMany({ where: { userId }, select: { mood: true } });
     const counts = Object.values(Mood).reduce<Record<string, number>>((acc, mood) => ({ ...acc, [mood]: 0 }), {});

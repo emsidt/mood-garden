@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client"
+  output = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Mood {
+  HAPPY
+  CALM
+  EXCITED
+  TIRED
+  SAD
+  STRESSED
+}
+
+enum ClothingCategory {
+  TOP
+  BOTTOM
+  OUTERWEAR
+  SHOES
+  ACCESSORY
+}
+
+enum ClothingStyle {
+  CASUAL
+  STREETWEAR
+  FORMAL
+  SPORT
+  MINIMAL
+}
+
+enum FeedbackType {
+  LIKE
+  DISLIKE
+  TOO_HOT
+  TOO_COLD
+  NOT_MY_STYLE
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  email String @unique
+  username String @unique
+  passwordHash String @map("password_hash")
+  avatarUrl String? @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  preferences UserPreference?
+  moods MoodEntry[]
+  streak MoodStreak?
+  garden Garden?
+  wardrobe WardrobeItem[]
+  weatherSnapshots WeatherSnapshot[]
+  outfits OutfitRecommendation[]
+  feedback OutfitFeedback[]
+  refreshTokens RefreshToken[]
+  @@map("users")
+}
+
+model UserPreference {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @unique @map("user_id") @db.Uuid
+  city String @default("Ho Chi Minh City")
+  timezone String @default("Asia/Ho_Chi_Minh")
+  preferredStyle ClothingStyle @default(CASUAL) @map("preferred_style")
+  temperatureTolerance Float @default(0) @map("temperature_tolerance")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("user_preferences")
+}
+
+model RefreshToken {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  tokenHash String @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model MoodEntry {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  mood Mood
+  note String? @db.VarChar(2000)
+  // Calendar date derived from the user's timezone by the mood service.
+  entryDate DateTime @db.Date @map("entry_date")
+  createdAt DateTime @default(now()) @map("created_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, entryDate])
+  @@map("mood_entries")
+}
+
+model MoodStreak {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @unique @map("user_id") @db.Uuid
+  currentStreak Int @default(0) @map("current_streak")
+  longestStreak Int @default(0) @map("longest_streak")
+  lastCheckInDate DateTime? @db.Date @map("last_check_in_date")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("mood_streaks")
+}
+
+model Garden {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @unique @map("user_id") @db.Uuid
+  level Int @default(1)
+  experience Int @default(0)
+  theme String @default("meadow")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items GardenItem[]
+  @@map("gardens")
+}
+
+model PlantCatalog {
+  id String @id @default(uuid()) @db.Uuid
+  name String
+  requiredLevel Int @default(1) @map("required_level")
+  imageUrl String? @map("image_url")
+  rarity String @default("COMMON")
+  items GardenItem[]
+  @@map("plant_catalog")
+}
+
+model GardenItem {
+  id String @id @default(uuid()) @db.Uuid
+  gardenId String @map("garden_id") @db.Uuid
+  plantId String @map("plant_id") @db.Uuid
+  positionX Float @default(0) @map("position_x")
+  positionY Float @default(0) @map("position_y")
+  unlockedAt DateTime @default(now()) @map("unlocked_at")
+  garden Garden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  plant PlantCatalog @relation(fields: [plantId], references: [id], onDelete: Restrict)
+  @@index([gardenId])
+  @@index([plantId])
+  @@map("garden_items")
+}
+
+model WardrobeItem {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  name String
+  category ClothingCategory
+  color String
+  style ClothingStyle
+  imageUrl String? @map("image_url")
+  purchaseUrl String? @map("purchase_url") @db.VarChar(2048)
+  minTemp Float @map("min_temp")
+  maxTemp Float @map("max_temp")
+  waterproof Boolean @default(false)
+  windResistant Boolean @default(false) @map("wind_resistant")
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outfitItems OutfitItem[]
+  @@index([userId, isActive, category])
+  @@map("wardrobe_items")
+}
+
+model WeatherSnapshot {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  city String
+  temperature Float
+  feelsLike Float @map("feels_like")
+  condition String
+  rain Boolean
+  windSpeed Float @map("wind_speed")
+  humidity Int
+  uvIndex Float? @map("uv_index")
+  createdAt DateTime @default(now()) @map("created_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  outfits OutfitRecommendation[]
+  @@index([userId, createdAt])
+  @@map("weather_snapshots")
+}
+
+model OutfitRecommendation {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  weatherSnapshotId String @map("weather_snapshot_id") @db.Uuid
+  score Float
+  isFavorite Boolean @default(false) @map("is_favorite")
+  createdAt DateTime @default(now()) @map("created_at")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weather WeatherSnapshot @relation(fields: [weatherSnapshotId], references: [id], onDelete: Cascade)
+  items OutfitItem[]
+  feedback OutfitFeedback[]
+  @@index([userId, createdAt])
+  @@index([weatherSnapshotId])
+  @@map("outfit_recommendations")
+}
+
+model OutfitItem {
+  id String @id @default(uuid()) @db.Uuid
+  outfitRecommendationId String @map("outfit_recommendation_id") @db.Uuid
+  wardrobeItemId String @map("wardrobe_item_id") @db.Uuid
+  outfit OutfitRecommendation @relation(fields: [outfitRecommendationId], references: [id], onDelete: Cascade)
+  wardrobeItem WardrobeItem @relation(fields: [wardrobeItemId], references: [id], onDelete: Restrict)
+  @@unique([outfitRecommendationId, wardrobeItemId])
+  @@index([wardrobeItemId])
+  @@map("outfit_items")
+}
+
+model OutfitFeedback {
+  id String @id @default(uuid()) @db.Uuid
+  outfitRecommendationId String @map("outfit_recommendation_id") @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  feedbackType FeedbackType @map("feedback_type")
+  createdAt DateTime @default(now()) @map("created_at")
+  outfit OutfitRecommendation @relation(fields: [outfitRecommendationId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([outfitRecommendationId, userId, feedbackType])
+  @@index([userId])
+  @@map("outfit_feedback")
+}

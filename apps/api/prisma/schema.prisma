@@ -93,6 +93,7 @@ model MoodEntry {
   note String? @db.VarChar(2000)
   // Calendar date derived from the user's timezone by the mood service.
   entryDate DateTime @db.Date @map("entry_date")
+  questCompleted Boolean @default(false) @map("quest_completed")
   createdAt DateTime @default(now()) @map("created_at")
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, entryDate])

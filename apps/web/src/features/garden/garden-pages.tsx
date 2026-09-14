@@ -5,7 +5,7 @@ import { api, errorMessage } from '../../lib/api';
 import { MoodAnalytics } from './mood-analytics';
 
 export type Mood = 'HAPPY' | 'CALM' | 'EXCITED' | 'TIRED' | 'SAD' | 'STRESSED';
-export type MoodEntry = { id: string; mood: Mood; note: string | null; entryDate: string; createdAt: string };
+export type MoodEntry = { id: string; mood: Mood; note: string | null; entryDate: string; createdAt: string; questCompleted?: boolean };
 type PurchasedDecor = { id: string; decorId: string };
 type DecorCatalogItem = { id: string; name: string; icon: string; price: number; description: string };
 type Garden = {
@@ -101,7 +101,7 @@ export function MoodPage() {
 }
 function CheckedIn({ entry }: { entry: MoodEntry }) {
   const client = useQueryClient();
-  const [questDone, setQuestDone] = useState(false);
+  const [questDone, setQuestDone] = useState(entry.questCompleted ?? false);
   const [questBusy, setQuestBusy] = useState(false);
   const mood = moodByValue[entry.mood];
   

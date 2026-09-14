@@ -18,7 +18,7 @@ export class MoodsService {
     const preference = await this.prisma.userPreference.findUniqueOrThrow({ where: { userId } });
     return this.prisma.moodEntry.findUnique({ where: { userId_entryDate: { userId, entryDate: dateInTimezone(preference.timezone) } } });
   }
-  history(userId: string) { return this.prisma.moodEntry.findMany({ where: { userId }, orderBy: { entryDate: 'desc' }, take: 92, select: { id: true, mood: true, note: true, entryDate: true, createdAt: true } }); }
+  history(userId: string) { return this.prisma.moodEntry.findMany({ where: { userId }, orderBy: { entryDate: 'desc' }, take: 92, select: { id: true, mood: true, note: true, entryDate: true, createdAt: true, questCompleted: true } }); }
   async statistics(userId: string) {
     const entries = await this.prisma.moodEntry.findMany({ where: { userId }, select: { mood: true } });
     const counts = Object.values(Mood).reduce<Record<string, number>>((acc, mood) => ({ ...acc, [mood]: 0 }), {});
@@ -46,6 +46,11 @@ export class MoodsService {
   }
   async completeQuest(userId: string) {
     return this.prisma.$transaction(async tx => {
+      const entry = await tx.moodEntry.findFirst({ where: { userId }, orderBy: { entryDate: 'desc' } });
+      if (!entry) throw new ConflictException('Chưa check-in hôm nay');
+      if (entry.questCompleted) throw new ConflictException('Bạn đã hoàn thành nhiệm vụ hôm nay rồi');
+      
+      await tx.moodEntry.update({ where: { id: entry.id }, data: { questCompleted: true } });
       const garden = await tx.garden.update({ where: { userId }, data: { experience: { increment: 15 }, seeds: { increment: 10 } } });
       const level = levelFor(garden.experience);
       const updatedGarden = level !== garden.level ? await tx.garden.update({ where: { userId }, data: { level } }) : garden;

@@ -23,6 +23,17 @@ type CurrentWeather = {
   city: string; temperature: number; feelsLike: number; condition: string; conditionText: string;
   rain: boolean; windSpeed: number; humidity: number; uvIndex: number; observedAt: string;
 };
+
+const ASSET_MAP: Record<string, string> = {
+  '🌱': '/assets/sprout_3d_1789357578185.jpg',
+  '🌼': '/assets/daisy_3d_1789357589522.jpg',
+  '🌷': '/assets/tulip_3d_1789357611774.jpg',
+  '🌳': '/assets/tree_3d_1789357623686.jpg',
+  '🪷': '/assets/lotus_3d_1789357648122.jpg',
+  '🐈': '/assets/cat_3d_1789357659854.jpg',
+  '🏮': '/assets/lantern_3d_1789357689717.jpg',
+  '🕊️': '/assets/bird_3d_1789357699751.jpg'
+};
 const moods: Array<{ value: Mood; icon: string; label: string; text: string }> = [
   { value: 'HAPPY', icon: '☀️', label: 'Vui vẻ', text: 'Hôm nay có một điều gì khiến bạn mỉm cười.' },
   { value: 'CALM', icon: '🍃', label: 'Bình yên', text: 'Bạn đang có một khoảng thở dịu dàng.' },
@@ -171,7 +182,9 @@ function GardenStore({ garden, client }: { garden: Garden, client: any }) {
         {catalog.data?.decor.map(item => {
           const owned = garden.decor?.some(d => d.decorId === item.id);
           return <article key={item.id} className={owned ? 'owned' : ''}>
-            <span className="item-icon">{item.icon}</span>
+            <span className="item-icon">
+              {ASSET_MAP[item.icon] ? <img src={ASSET_MAP[item.icon]} alt={item.name} className="asset-3d shop-asset" /> : item.icon}
+            </span>
             <div className="item-info">
               <strong>{item.name}</strong>
               <p>{item.description}</p>
@@ -237,18 +250,22 @@ export function GardenPage() {
       <span className="scene-cloud cloud-two">☁</span>
       <span className="scene-hill hill-far" />
       <span className="scene-hill hill-near" />
-      {data.unlocked.map((item, index) => <span key={item.name} className={'scene-plant plant-' + index} title={item.name}>{item.icon}</span>)}
+      {data.unlocked.map((item, index) => <span key={item.name} className={'scene-plant plant-' + index} title={item.name}>
+        {ASSET_MAP[item.icon] ? <img src={ASSET_MAP[item.icon]} alt={item.name} className="asset-3d scene-asset" /> : item.icon}
+      </span>)}
       {data.decor?.map((d) => {
         const catItem = catalog.data?.decor.find(c => c.id === d.decorId);
         if (!catItem) return null;
-        return <span key={d.id} className={`scene-decor decor-${d.decorId}`} title={catItem.name}>{catItem.icon}</span>;
+        return <span key={d.id} className={`scene-decor decor-${d.decorId}`} title={catItem.name}>
+          {ASSET_MAP[catItem.icon] ? <img src={ASSET_MAP[catItem.icon]} alt={catItem.name} className="asset-3d scene-asset" /> : catItem.icon}
+        </span>;
       })}
       <div className="rain-container">{rainDrops.map(d => <span key={d.id} className="rain-drop" style={{ left: d.left + '%', height: d.height + 'px', animationDelay: d.delay + 's', animationDuration: d.duration + 's' }} />)}</div>
       <span className="scene-message">Cứ lớn lên theo nhịp của bạn.</span>
     </div>
     {weather.data ? <><section className="weather-card"><span className="weather-icon">{weather.data.rain ? '🌧️' : weather.data.condition === 'CLEAR' ? '☀️' : '☁️'}</span><div><p className="eyebrow">THỜI TIẾT Ở {weather.data.city.toUpperCase()}</p><strong>{Math.round(weather.data.temperature)}°</strong><span>{weather.data.conditionText} · Cảm giác {Math.round(weather.data.feelsLike)}°</span></div><div className="weather-details"><span>💧 {weather.data.humidity}%</span><span>🍃 {Math.round(weather.data.windSpeed)} km/h</span><span>☀️ UV {weather.data.uvIndex}</span></div></section><p className="weather-credit">Dữ liệu thời tiết bởi <a href="https://www.weatherapi.com/" target="_blank" rel="noreferrer">WeatherAPI.com</a></p></> : weather.isPending ? <p className="weather-loading" role="status">Đang lấy thời tiết theo thành phố của bạn…</p> : weather.isError ? <p className="weather-unavailable">{errorMessage(weather.error)} <button onClick={() => { void weather.refetch(); }}>Thử lại</button></p> : null}
     <div className="garden-stats"><article><span>🔥</span><div><strong>{data.streak.current} ngày</strong><p>Chuỗi hiện tại</p></div></article><article><span>✦</span><div><strong>{data.experience} XP</strong><p>Kinh nghiệm đã tích lũy</p></div></article><article><span>🌿</span><div><strong>{data.streak.longest} ngày</strong><p>Chuỗi dài nhất</p></div></article></div>
-    <section className="garden-progress"><div><h2>Tiến độ cấp {data.level}</h2><span>{data.progress.current} / {data.progress.target} XP</span></div><div className="progress-track"><i style={{ width: percent + '%' }} /></div><p>{data.nextUnlock ? <>Còn {Math.max(0, data.progress.nextLevelAt - data.experience)} XP để mở khóa <strong>{data.nextUnlock.icon} {data.nextUnlock.name}</strong>.</> : 'Bạn đã mở khóa tất cả cây trong khu vườn.'}</p></section>
-    <section className="unlocks"><div className="section-heading"><h2>Những điều đã nở</h2><span>{data.unlocked.length} mở khóa</span></div><div>{data.unlocked.map(item => <article key={item.name}><span>{item.icon}</span><div><strong>{item.name}</strong><p>{item.description}</p></div><small>Cấp {item.level}</small></article>)}</div></section>
+    <section className="garden-progress"><div><h2>Tiến độ cấp {data.level}</h2><span>{data.progress.current} / {data.progress.target} XP</span></div><div className="progress-track"><i style={{ width: percent + '%' }} /></div><p>{data.nextUnlock ? <>Còn {Math.max(0, data.progress.nextLevelAt - data.experience)} XP để mở khóa <strong>{ASSET_MAP[data.nextUnlock.icon] ? <img src={ASSET_MAP[data.nextUnlock.icon]} className="asset-3d inline-asset" alt={data.nextUnlock.name}/> : data.nextUnlock.icon} {data.nextUnlock.name}</strong>.</> : 'Bạn đã mở khóa tất cả cây trong khu vườn.'}</p></section>
+    <section className="unlocks"><div className="section-heading"><h2>Những điều đã nở</h2><span>{data.unlocked.length} mở khóa</span></div><div>{data.unlocked.map(item => <article key={item.name}><span>{ASSET_MAP[item.icon] ? <img src={ASSET_MAP[item.icon]} className="asset-3d list-asset" alt={item.name}/> : item.icon}</span><div><strong>{item.name}</strong><p>{item.description}</p></div><small>Cấp {item.level}</small></article>)}</div></section>
   </section>;
 }

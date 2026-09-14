@@ -200,9 +200,17 @@ function GardenStore({ garden, client }: { garden: Garden, client: any }) {
   </div>;
 }
 
+const SOUNDSCAPES = [
+  "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3",
+  "https://cdn.pixabay.com/download/audio/2022/11/22/audio_8bea36c2cb.mp3",
+  "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8b8173967.mp3",
+  "https://cdn.pixabay.com/download/audio/2022/04/27/audio_40df035eb5.mp3"
+];
+
 function SoundscapePlayer() {
   const [playing, setPlaying] = useState(false);
   const audioRef = React.useRef<HTMLAudioElement>(null);
+  const trackUrl = useMemo(() => SOUNDSCAPES[Math.floor(Math.random() * SOUNDSCAPES.length)], []);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -221,7 +229,7 @@ function SoundscapePlayer() {
       </button>
       <audio 
         ref={audioRef} 
-        src="https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3" 
+        src={trackUrl} 
         loop 
         preload="none"
       />

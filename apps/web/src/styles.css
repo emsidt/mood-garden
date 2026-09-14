@@ -351,3 +351,12 @@ footer { border-top: 1px solid #dde2d7; padding: 24px 0; display: flex; justify-
 }
 .garden-scene:hover { transform: none; }
 @media (max-width: 700px) { .garden-scene { height: 320px; } .garden-scene::before { bottom: 82px; } .garden-scene::after { height: 130px; } }
+
+/* Keep the actual unlocked plant illustrations in the flat garden. */
+.garden-scene .scene-plant { display: block; z-index: 6; filter: none; }
+.garden-scene .scene-plant .scene-asset { display: block; object-fit: contain; -webkit-mask-image: none; mask-image: none; filter: none; animation: none; }
+.garden-scene .plant-0 { left: 6%; bottom: 24px; }
+.garden-scene .plant-1 { left: 24%; bottom: 18px; }
+.garden-scene .plant-2 { left: 43%; bottom: 24px; }
+.garden-scene .plant-3 { left: 62%; bottom: 18px; }
+.garden-scene .plant-4 { left: 80%; bottom: 20px; }

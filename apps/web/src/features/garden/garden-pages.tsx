@@ -25,11 +25,11 @@ type CurrentWeather = {
 };
 
 const ASSET_MAP: Record<string, string> = {
-  '🌱': '/assets/sprout_3d_1789357578185.jpg',
-  '🌼': '/assets/daisy_3d_1789357589522.jpg',
-  '🌷': '/assets/tulip_3d_1789357611774.jpg',
-  '🌳': '/assets/tree_3d_1789357623686.jpg',
-  '🪷': '/assets/lotus_3d_1789357648122.jpg',
+  '🌱': '/assets/sprout_2d_1789358212903.jpg',
+  '🌼': '/assets/daisy_2d_1789358226129.jpg',
+  '🌷': '/assets/tulip_2d_1789358253943.jpg',
+  '🌳': '/assets/tree_2d_1789358264275.jpg',
+  '🪷': '/assets/lotus_2d_1789358287550.jpg',
   '🐈': '/assets/cat_3d_1789357659854.jpg',
   '🏮': '/assets/lantern_3d_1789357689717.jpg',
   '🕊️': '/assets/bird_3d_1789357699751.jpg'

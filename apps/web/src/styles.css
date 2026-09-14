@@ -184,10 +184,18 @@ footer { border-top: 1px solid #dde2d7; padding: 24px 0; display: flex; justify-
 .shop-items .item-info p { margin: 0; font-size: 12px; color: #63705f; }
 .button-small { padding: 6px 12px; font-size: 13px; }
 
-@keyframes pop-in {
-  0% { transform: scale(0); opacity: 0; }
-  80% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes popIn {
+  0% { transform: scale(0) translateY(20px); opacity: 0; }
+  60% { transform: scale(1.1) translateY(-10px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes sway {
+  0% { transform: rotate(-4deg); }
+  100% { transform: rotate(4deg); }
+}
+@keyframes breathe {
+  0% { transform: scale(1) translateY(0); }
+  100% { transform: scale(1.02, 0.98) translateY(2px); }
 }
 @keyframes cat-routine {
   /* Sleep at origin (facing right) */
@@ -228,24 +236,24 @@ footer { border-top: 1px solid #dde2d7; padding: 24px 0; display: flex; justify-
 .shop-asset { width: 64px; height: 64px; }
 
 .scene-plant { position: absolute; bottom: 40px; transform-origin: bottom center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
-.scene-plant .scene-asset { width: 140px; height: 140px; }
+.scene-plant .scene-asset { width: 140px; height: 140px; animation: sway 4s ease-in-out infinite alternate; transform-origin: bottom center; }
 .plant-0 { left: 5%; bottom: -10px; }
-.plant-0 .scene-asset { width: 120px; height: 120px; }
+.plant-0 .scene-asset { width: 120px; height: 120px; animation-duration: 3.5s; animation-delay: 0.2s; }
 .plant-1 { left: 25%; bottom: -15px; }
-.plant-1 .scene-asset { width: 130px; height: 130px; }
+.plant-1 .scene-asset { width: 130px; height: 130px; animation-duration: 4.2s; animation-delay: 0.5s; }
 .plant-2 { left: 45%; bottom: 10px; }
-.plant-2 .scene-asset { width: 160px; height: 160px; }
+.plant-2 .scene-asset { width: 160px; height: 160px; animation-duration: 3.8s; animation-delay: 0.1s; }
 .plant-3 { left: 65%; bottom: -5px; }
-.plant-3 .scene-asset { width: 150px; height: 150px; }
+.plant-3 .scene-asset { width: 150px; height: 150px; animation-duration: 4.5s; animation-delay: 0.8s; }
 .plant-4 { left: 85%; bottom: -10px; }
-.plant-4 .scene-asset { width: 130px; height: 130px; }
+.plant-4 .scene-asset { width: 130px; height: 130px; animation-duration: 3.9s; animation-delay: 0.4s; }
 
 .scene-decor { position: absolute; }
 .scene-decor .scene-asset { width: 120px; height: 120px; }
 .decor-cat_sleeping { right: 2%; bottom: -20px; }
-.decor-cat_sleeping .scene-asset { width: 160px; height: 160px; }
+.decor-cat_sleeping .scene-asset { width: 160px; height: 160px; animation: breathe 3s ease-in-out infinite alternate; transform-origin: bottom center; }
 .decor-lantern { left: -5%; bottom: 30px; }
-.decor-lantern .scene-asset { width: 140px; height: 140px; filter: drop-shadow(0 0 20px rgba(255, 200, 0, 0.5)); }
+.decor-lantern .scene-asset { width: 140px; height: 140px; filter: drop-shadow(0 0 20px rgba(255, 200, 0, 0.5)); animation: sway 6s ease-in-out infinite alternate; transform-origin: top center; }
 .decor-bird { left: 40%; top: 40px; animation: fly-across 25s linear infinite; }
 .decor-bird .scene-asset { width: 100px; height: 100px; }
 

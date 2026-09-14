@@ -68,16 +68,33 @@ function HeatmapCalendar({ entries }: { entries: MoodEntry[] }) {
   }, [dateMap]);
 
   const monthLabels = useMemo(() => {
-    const labels: string[] = [];
+    const labels = Array(WEEKS).fill('');
     let lastMonth = -1;
     for (let wi = 0; wi < WEEKS; wi++) {
       const cell = cells[wi * 7];
-      if (cell) {
-        const d = parseLocalDate(cell.date);
-        const month = d.getMonth();
-        labels.push(month !== lastMonth ? (lastMonth = month, d.toLocaleDateString('vi-VN', { month: 'short' })) : '');
-      } else {
-        labels.push('');
+      if (!cell) continue;
+      const d = parseLocalDate(cell.date);
+      const month = d.getMonth();
+      if (month !== lastMonth) {
+        labels[wi] = d.toLocaleDateString('vi-VN', { month: 'short' });
+        lastMonth = month;
+      }
+    }
+    
+    // Xóa label bị trùng (quá gần nhau), ưu tiên giữ label của tháng đầy đủ (bỏ label ở cột đầu tiên nếu tháng mới bắt đầu ngay sau đó)
+    let lastIdx = -1;
+    for (let i = 0; i < WEEKS; i++) {
+      if (labels[i]) {
+        if (lastIdx !== -1 && i - lastIdx < 3) {
+          if (lastIdx === 0) {
+            labels[lastIdx] = '';
+            lastIdx = i;
+          } else {
+            labels[i] = '';
+          }
+        } else {
+          lastIdx = i;
+        }
       }
     }
     return labels;

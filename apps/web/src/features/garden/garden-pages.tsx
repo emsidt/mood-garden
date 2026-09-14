@@ -26,6 +26,19 @@ const moods: Array<{ value: Mood; icon: string; label: string; text: string }> =
 ];
 const moodByValue = Object.fromEntries(moods.map(item => [item.value, item]));
 
+const DAILY_QUOTES = [
+  "Mỗi ngày là một khởi đầu mới, hãy hít thở thật sâu.",
+  "Mọi chuyện rồi sẽ ổn thôi, giống như mặt trời luôn mọc sau đêm tối.",
+  "Bình yên là khi đứng giữa ồn ào ta vẫn thấy lòng an yên.",
+  "Đừng quá khắt khe với bản thân. Bạn đang làm rất tốt rồi.",
+  "Hạnh phúc lớn nhất đơn giản chỉ là thời khắc hiện tại.",
+  "Hãy tự đối xử dịu dàng với bản thân, vì bạn xứng đáng.",
+  "Chỉ cần bạn không bỏ cuộc, mọi thứ đều có thể bắt đầu lại.",
+  "Dù hôm nay có ra sao, bạn vẫn luôn có ngày mai để hy vọng.",
+  "Sự bình tĩnh là siêu năng lực của bạn trong một thế giới vội vã.",
+  "Nụ cười của bạn là ánh nắng xua tan muộn phiền của chính mình."
+];
+
 export function MoodPage() {
   const client = useQueryClient();
   const today = useQuery({ queryKey: ['mood-today'], queryFn: async () => (await api.get<MoodEntry | null>('/moods/today')).data });
@@ -43,11 +56,20 @@ export function MoodPage() {
       await Promise.all([client.invalidateQueries({ queryKey: ['mood-today'] }), client.invalidateQueries({ queryKey: ['mood-history'] }), client.invalidateQueries({ queryKey: ['garden'] })]);
     } catch (cause) { setError(errorMessage(cause)); } finally { setBusy(false); }
   }
+  const dailyQuote = useMemo(() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    return DAILY_QUOTES[dayOfYear % DAILY_QUOTES.length];
+  }, []);
+
   if (today.isPending) return <section className="placeholder"><p role="status">Đang chuẩn bị khoảng dừng cho bạn…</p></section>;
   const entry = today.data;
   return <section className="mood-page">
     <p className="eyebrow">MỘT KHOẢNG DỪNG NHỎ</p>
     <h1>Hôm nay bạn<br />thấy thế nào?</h1>
+    <div className="daily-quote">
+      <span className="quote-icon">❝</span>
+      <p>{dailyQuote}</p>
+    </div>
     {entry ? <CheckedIn entry={entry} /> : <form onSubmit={submit}>
       <div className="mood-options">{moods.map(item => <button type="button" key={item.value} className={'mood-option ' + (chosen === item.value ? 'selected' : '')} onClick={() => { setChosen(item.value); setError(''); }}>
         <span>{item.icon}</span><strong>{item.label}</strong>

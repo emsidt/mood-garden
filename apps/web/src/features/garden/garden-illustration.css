@@ -1,0 +1,19 @@
+.living-garden { margin: 0 0 24px; overflow: hidden; background: #e9ecdf; }
+.living-garden-canvas { display: block; width: 100%; height: auto; }
+.living-garden figcaption { display: flex; justify-content: space-between; gap: 12px; padding: 13px 18px; color: #586e52; font-size: 12px; }
+.garden-sprite { display: inline-block; vertical-align: middle; width: 64px; height: 80px; overflow: visible; }
+.garden-sprite.inline-asset { width: 24px; height: 30px; border-radius: 0; }
+.garden-sprite.list-asset { width: 64px; height: 80px; }
+.garden-sprite.shop-asset { width: 64px; height: 80px; }
+.living-garden .garden-stems { transform-origin: 80px 145px; animation: garden-leaf-sway 6s ease-in-out infinite; }
+.garden-cat-breathe { transform-box: fill-box; transform-origin: center bottom; animation: garden-cat-sleep 4s ease-in-out infinite; }
+.garden-bird-flight { animation: garden-bird-travel 16s ease-in-out infinite; }
+.garden-bird-wing { transform-box: fill-box; transform-origin: right bottom; animation: garden-wing-beat 1.2s ease-in-out infinite; }
+.garden-rain { animation: garden-rain-drift 1.2s linear infinite; }
+@keyframes garden-leaf-sway { 0%,100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
+@keyframes garden-cat-sleep { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(1.035); } }
+@keyframes garden-bird-travel { 0%,100% { transform: translate(0,0); } 40% { transform: translate(-230px,25px); } 70% { transform: translate(85px,-15px); } }
+@keyframes garden-wing-beat { 50% { transform: rotate(18deg); } }
+@keyframes garden-rain-drift { to { transform: translate(-6px,18px); } }
+@media(max-width:600px) { .living-garden figcaption { font-size: 10px; padding: 10px; flex-wrap: wrap; } }
+@media(prefers-reduced-motion:reduce) { .living-garden *, .garden-sprite * { animation: none !important; } }

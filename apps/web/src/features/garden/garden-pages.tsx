@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, errorMessage } from '../../lib/api';
 
 import { MoodAnalytics } from './mood-analytics';
+import { GardenIllustration, GardenSprite } from './garden-illustration';
 
 export type Mood = 'HAPPY' | 'CALM' | 'EXCITED' | 'TIRED' | 'SAD' | 'STRESSED';
 export type MoodEntry = { id: string; mood: Mood; note: string | null; entryDate: string; createdAt: string; questCompleted?: boolean };
@@ -24,16 +25,6 @@ type CurrentWeather = {
   rain: boolean; windSpeed: number; humidity: number; uvIndex: number; observedAt: string;
 };
 
-const ASSET_MAP: Record<string, string> = {
-  '🌱': '/assets/sprout_2d_1789358212903.jpg',
-  '🌼': '/assets/daisy_2d_1789358226129.jpg',
-  '🌷': '/assets/tulip_2d_1789358253943.jpg',
-  '🌳': '/assets/tree_2d_1789358264275.jpg',
-  '🪷': '/assets/lotus_2d_1789358287550.jpg',
-  '🐈': '/assets/cat_3d_1789357659854.jpg',
-  '🏮': '/assets/lantern_3d_1789357689717.jpg',
-  '🕊️': '/assets/bird_3d_1789357699751.jpg'
-};
 const moods: Array<{ value: Mood; icon: string; label: string; text: string }> = [
   { value: 'HAPPY', icon: '☀️', label: 'Vui vẻ', text: 'Hôm nay có một điều gì khiến bạn mỉm cười.' },
   { value: 'CALM', icon: '🍃', label: 'Bình yên', text: 'Bạn đang có một khoảng thở dịu dàng.' },
@@ -183,7 +174,7 @@ function GardenStore({ garden, client }: { garden: Garden, client: any }) {
           const owned = garden.decor?.some(d => d.decorId === item.id);
           return <article key={item.id} className={owned ? 'owned' : ''}>
             <span className="item-icon">
-              {ASSET_MAP[item.icon] ? <img src={ASSET_MAP[item.icon]} alt={item.name} className="asset-3d shop-asset" /> : item.icon}
+              <GardenSprite icon={item.icon} label={item.name} className="shop-asset" />
             </span>
             <div className="item-info">
               <strong>{item.name}</strong>
@@ -216,7 +207,6 @@ function GardenStore({ garden, client }: { garden: Garden, client: any }) {
 export function GardenPage() {
   const client = useQueryClient();
   const garden = useQuery({ queryKey: ['garden'], queryFn: async () => (await api.get<Garden>('/garden')).data });
-  const catalog = useQuery({ queryKey: ['garden-catalog'], queryFn: async () => (await api.get<Catalog>('/garden/catalog')).data });
 
   const weather = useQuery({
     queryKey: ['weather-current', 'v3'],
@@ -225,18 +215,10 @@ export function GardenPage() {
     retry: 3,
     retryDelay: 1500,
   });
-  const rainDrops = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    height: 12 + Math.random() * 18,
-    delay: Math.random() * 2,
-    duration: 0.6 + Math.random() * 0.6,
-  })), []);
   if (garden.isPending) return <section className="placeholder"><p role="status">Đang mở khu vườn của bạn…</p></section>;
   if (garden.isError) return <section className="placeholder"><p role="alert">{errorMessage(garden.error)}</p><button className="button" onClick={() => { void garden.refetch(); }}>Thử lại</button></section>;
   const data = garden.data!;
   const percent = Math.max(0, Math.min(100, Math.round(data.progress.current / data.progress.target * 100)));
-  const weatherClass = weather.data?.rain ? 'weather-rain' : weather.data && weather.data.condition !== 'CLEAR' ? 'weather-cloudy' : '';
   return <section className="garden-page">
     <p className="eyebrow">KHU VƯỜN CỦA BẠN</p><div className="section-heading"><div><h1>Đang lớn lên<br />từng chút một.</h1><p className="garden-subtitle">Mỗi lần bạn lắng nghe mình, khu vườn lại có thêm sức sống.</p></div><div className="garden-level"><span>Cấp độ</span><strong>{data.level}</strong><br/><small>{data.seeds} Hạt giống</small></div></div>
     
@@ -244,28 +226,10 @@ export function GardenPage() {
       <GardenStore garden={data} client={client} />
     </div>
 
-    <div className={'garden-scene ' + weatherClass} aria-label={'Khu vườn cấp ' + data.level}>
-      <span className="scene-sun" />
-      <span className="scene-cloud cloud-one">☁</span>
-      <span className="scene-cloud cloud-two">☁</span>
-      <span className="scene-hill hill-far" />
-      <span className="scene-hill hill-near" />
-      {data.unlocked.map((item, index) => <span key={item.name} className={'scene-plant plant-' + index} title={item.name}>
-        {ASSET_MAP[item.icon] ? <img src={ASSET_MAP[item.icon]} alt={item.name} className="asset-3d scene-asset" /> : item.icon}
-      </span>)}
-      {data.decor?.map((d) => {
-        const catItem = catalog.data?.decor.find(c => c.id === d.decorId);
-        if (!catItem) return null;
-        return <span key={d.id} className={`scene-decor decor-${d.decorId}`} title={catItem.name}>
-          {ASSET_MAP[catItem.icon] ? <img src={ASSET_MAP[catItem.icon]} alt={catItem.name} className="asset-3d scene-asset" /> : catItem.icon}
-        </span>;
-      })}
-      <div className="rain-container">{rainDrops.map(d => <span key={d.id} className="rain-drop" style={{ left: d.left + '%', height: d.height + 'px', animationDelay: d.delay + 's', animationDuration: d.duration + 's' }} />)}</div>
-      <span className="scene-message">Cứ lớn lên theo nhịp của bạn.</span>
-    </div>
+    <GardenIllustration level={data.level} plants={data.unlocked} decor={data.decor} rain={weather.data?.rain} cloudy={Boolean(weather.data && weather.data.condition !== 'CLEAR')} />
     {weather.data ? <><section className="weather-card"><span className="weather-icon">{weather.data.rain ? '🌧️' : weather.data.condition === 'CLEAR' ? '☀️' : '☁️'}</span><div><p className="eyebrow">THỜI TIẾT Ở {weather.data.city.toUpperCase()}</p><strong>{Math.round(weather.data.temperature)}°</strong><span>{weather.data.conditionText} · Cảm giác {Math.round(weather.data.feelsLike)}°</span></div><div className="weather-details"><span>💧 {weather.data.humidity}%</span><span>🍃 {Math.round(weather.data.windSpeed)} km/h</span><span>☀️ UV {weather.data.uvIndex}</span></div></section><p className="weather-credit">Dữ liệu thời tiết bởi <a href="https://www.weatherapi.com/" target="_blank" rel="noreferrer">WeatherAPI.com</a></p></> : weather.isPending ? <p className="weather-loading" role="status">Đang lấy thời tiết theo thành phố của bạn…</p> : weather.isError ? <p className="weather-unavailable">{errorMessage(weather.error)} <button onClick={() => { void weather.refetch(); }}>Thử lại</button></p> : null}
     <div className="garden-stats"><article><span>🔥</span><div><strong>{data.streak.current} ngày</strong><p>Chuỗi hiện tại</p></div></article><article><span>✦</span><div><strong>{data.experience} XP</strong><p>Kinh nghiệm đã tích lũy</p></div></article><article><span>🌿</span><div><strong>{data.streak.longest} ngày</strong><p>Chuỗi dài nhất</p></div></article></div>
-    <section className="garden-progress"><div><h2>Tiến độ cấp {data.level}</h2><span>{data.progress.current} / {data.progress.target} XP</span></div><div className="progress-track"><i style={{ width: percent + '%' }} /></div><p>{data.nextUnlock ? <>Còn {Math.max(0, data.progress.nextLevelAt - data.experience)} XP để mở khóa <strong>{ASSET_MAP[data.nextUnlock.icon] ? <img src={ASSET_MAP[data.nextUnlock.icon]} className="asset-3d inline-asset" alt={data.nextUnlock.name}/> : data.nextUnlock.icon} {data.nextUnlock.name}</strong>.</> : 'Bạn đã mở khóa tất cả cây trong khu vườn.'}</p></section>
-    <section className="unlocks"><div className="section-heading"><h2>Những điều đã nở</h2><span>{data.unlocked.length} mở khóa</span></div><div>{data.unlocked.map(item => <article key={item.name}><span>{ASSET_MAP[item.icon] ? <img src={ASSET_MAP[item.icon]} className="asset-3d list-asset" alt={item.name}/> : item.icon}</span><div><strong>{item.name}</strong><p>{item.description}</p></div><small>Cấp {item.level}</small></article>)}</div></section>
+    <section className="garden-progress"><div><h2>Tiến độ cấp {data.level}</h2><span>{data.progress.current} / {data.progress.target} XP</span></div><div className="progress-track"><i style={{ width: percent + '%' }} /></div><p>{data.nextUnlock ? <>Còn {Math.max(0, data.progress.nextLevelAt - data.experience)} XP để mở khóa <strong><GardenSprite icon={data.nextUnlock.icon} label={data.nextUnlock.name} className="inline-asset" /> {data.nextUnlock.name}</strong>.</> : 'Bạn đã mở khóa tất cả cây trong khu vườn.'}</p></section>
+    <section className="unlocks"><div className="section-heading"><h2>Những điều đã nở</h2><span>{data.unlocked.length} mở khóa</span></div><div>{data.unlocked.map(item => <article key={item.name}><span><GardenSprite icon={item.icon} label={item.name} className="list-asset" /></span><div><strong>{item.name}</strong><p>{item.description}</p></div><small>Cấp {item.level}</small></article>)}</div></section>
   </section>;
 }

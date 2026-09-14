@@ -202,6 +202,8 @@ function GardenStore({ garden, client }: { garden: Garden, client: any }) {
 
 const SOUNDSCAPES = [
   "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3",
+  "https://streams.ilovemusic.de/iloveradio17.mp3",
+  "https://stream.zeno.fm/f3wvbbqmdg8uv"
 ];
 
 function SoundscapePlayer() {

@@ -153,8 +153,16 @@ export function GardenIllustration({ level, plants, decor = [], rain = false, cl
           <svg x={spec.x} y={spec.y} width={spec.size} height={spec.size*1.25} viewBox="0 0 160 200" overflow="visible" role="img" aria-label={spec.name}><title>{spec.name}</title><Sprite kind={spec.kind}/></svg>
         </g>;
       })}
-      {rain && <g className="garden-rain" aria-hidden="true" stroke="#dfebe3" strokeWidth="1.5" opacity=".45">
-        {Array.from({ length: 35 }, (_, i) => <path key={i} d={`M${(i*137)%1200} ${(i*73)%530}l-6 15`}/>)}
+      {rain && <g className="garden-rain" aria-hidden="true" stroke="#dfebe3" strokeLinecap="round">
+        {Array.from({ length: 52 }, (_, i) => {
+          const duration = 0.85 + ((i * 17) % 65) / 100;
+          const length = 12 + ((i * 7) % 15);
+          return <path key={i} className="garden-raindrop"
+            d={`M${(i * 137) % 1264} 0l${-length * 0.103} ${length}`}
+            strokeWidth={i % 3 === 0 ? 1.6 : 1}
+            opacity={0.22 + (i % 4) * 0.08}
+            style={{ animationDuration: duration + 's', animationDelay: -(i * 0.618 % 1) * duration + 's' }}/>;
+        })}
       </g>}
     </svg>
     <figcaption><span>Một góc xanh, lớn lên cùng bạn.</span><span>{plants.length} cây · {decor.length} đồ trang trí</span></figcaption>

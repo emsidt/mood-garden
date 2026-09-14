@@ -360,3 +360,12 @@ footer { border-top: 1px solid #dde2d7; padding: 24px 0; display: flex; justify-
 .garden-scene .plant-2 { left: 43%; bottom: 24px; }
 .garden-scene .plant-3 { left: 62%; bottom: 18px; }
 .garden-scene .plant-4 { left: 80%; bottom: 20px; }
+
+/* Cohesive illustrated scene, replacing the mismatched legacy plant-card assets. */
+.garden-scene, .garden-scene.weather-cloudy, .garden-scene.weather-rain {
+  background: #25445c url('/assets/garden-night-2d.png') center / cover no-repeat;
+  border-radius: 0;
+  box-shadow: none;
+}
+.garden-scene::before, .garden-scene::after { display: none; }
+.garden-scene .scene-plant, .garden-scene .scene-decor, .garden-scene .scene-sun, .garden-scene .scene-cloud, .garden-scene .scene-hill, .garden-scene .rain-container, .garden-scene .scene-message { display: none; }

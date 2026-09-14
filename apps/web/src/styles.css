@@ -181,9 +181,27 @@ footer { border-top: 1px solid #dde2d7; padding: 24px 0; display: flex; justify-
   80% { transform: scale(1.1); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
-@keyframes breathe {
-  0%, 100% { transform: scaleX(-1) scaleY(1); }
-  50% { transform: scaleX(-1) scaleY(1.05); }
+@keyframes cat-routine {
+  /* Sleep at origin (facing right) */
+  0%, 20%, 40%, 55% { transform: translateX(0) scaleX(-1) scaleY(1); }
+  10%, 30%, 50% { transform: translateX(0) scaleX(-1) scaleY(1.05); }
+  
+  /* Wake up & face left */
+  56%, 57% { transform: translateX(0) scaleX(1) scaleY(1); }
+  
+  /* Run left */
+  62% { transform: translateX(-200px) scaleX(1) scaleY(1); }
+  
+  /* Sleep at new spot (facing right) */
+  63%, 70%, 80% { transform: translateX(-200px) scaleX(-1) scaleY(1); }
+  66.5%, 75% { transform: translateX(-200px) scaleX(-1) scaleY(1.05); }
+  
+  /* Run back right */
+  81% { transform: translateX(-200px) scaleX(-1) scaleY(1); }
+  87% { transform: translateX(0) scaleX(-1) scaleY(1); }
+  
+  /* Settle back at origin */
+  88%, 100% { transform: translateX(0) scaleX(-1) scaleY(1); }
 }
 @keyframes fly-across {
   0% { transform: translateX(0px) translateY(0) scaleX(1); }
@@ -195,7 +213,7 @@ footer { border-top: 1px solid #dde2d7; padding: 24px 0; display: flex; justify-
   100% { transform: translateX(0px) translateY(0) scaleX(1); }
 }
 .scene-decor { position: absolute; font-size: 32px; z-index: 5; }
-.decor-cat_sleeping { bottom: 10%; right: 20%; animation: breathe 3s ease-in-out infinite; transform-origin: bottom center; }
+.decor-cat_sleeping { bottom: 10%; right: 20%; animation: cat-routine 25s linear infinite; transform-origin: bottom center; }
 .decor-lantern { bottom: 35%; left: 15%; font-size: 24px; filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6)); }
 .decor-bird { top: 20%; right: 30%; font-size: 24px; animation: fly-across 12s linear infinite; }
 

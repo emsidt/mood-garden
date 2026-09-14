@@ -200,42 +200,6 @@ function GardenStore({ garden, client }: { garden: Garden, client: any }) {
   </div>;
 }
 
-const SOUNDSCAPES = [
-  "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3",
-  "https://streams.ilovemusic.de/iloveradio17.mp3",
-  "https://stream.zeno.fm/f3wvbbqmdg8uv"
-];
-
-function SoundscapePlayer() {
-  const [playing, setPlaying] = useState(false);
-  const audioRef = React.useRef<HTMLAudioElement>(null);
-  const trackUrl = useMemo(() => SOUNDSCAPES[Math.floor(Math.random() * SOUNDSCAPES.length)], []);
-
-  const togglePlay = () => {
-    if (!audioRef.current) return;
-    if (playing) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play().catch(e => console.error("Audio play failed", e));
-    }
-    setPlaying(!playing);
-  };
-
-  return (
-    <>
-      <button className={`button soundscape-player ${playing ? 'playing' : ''}`} onClick={togglePlay}>
-        <span>{playing ? '🎵 Đang phát: Lofi Chill' : '🔇 Bật nhạc thư giãn'}</span>
-      </button>
-      <audio 
-        ref={audioRef} 
-        src={trackUrl} 
-        loop 
-        preload="none"
-      />
-    </>
-  );
-}
-
 export function GardenPage() {
   const client = useQueryClient();
   const garden = useQuery({ queryKey: ['garden'], queryFn: async () => (await api.get<Garden>('/garden')).data });
@@ -265,7 +229,6 @@ export function GardenPage() {
     
     <div className="garden-controls">
       <GardenStore garden={data} client={client} />
-      <SoundscapePlayer />
     </div>
 
     <div className={'garden-scene ' + weatherClass} aria-label={'Khu vườn cấp ' + data.level}>

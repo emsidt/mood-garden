@@ -1,4 +1,5 @@
 import { NavLink, Route, Routes, Link } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from './lib/api';
 import { AccountLink, AuthPage as LegacyAuthPage, ProfilePage, RequireAuth } from './features/auth/auth-pages';
@@ -26,6 +27,37 @@ function Placeholder({ title, description, icon }: typeof sections[number]) {
   return <section className="placeholder"><span className="card-icon" aria-hidden="true">{icon}</span><p className="eyebrow">SẮP NẢY MẦM</p><h1>{title}</h1><p>{description}</p><p>Chức năng này sẽ được xây dựng ở giai đoạn tiếp theo.</p><Link className="button" to="/">Về trang hôm nay</Link></section>;
 }
 
+const SOUNDSCAPES = [
+  "https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3",
+  "https://streams.ilovemusic.de/iloveradio17.mp3",
+  "https://stream.zeno.fm/f3wvbbqmdg8uv"
+];
+
+function SoundscapePlayer() {
+  const [playing, setPlaying] = useState(false);
+  const audioRef = React.useRef<HTMLAudioElement>(null);
+  const trackUrl = useMemo(() => SOUNDSCAPES[Math.floor(Math.random() * SOUNDSCAPES.length)], []);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (playing) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(e => console.error("Audio play failed", e));
+    }
+    setPlaying(!playing);
+  };
+
+  return (
+    <div className="global-player">
+      <button className={`button soundscape-player ${playing ? 'playing' : ''}`} onClick={togglePlay}>
+        <span>{playing ? '🎵' : '🔇'}</span>
+      </button>
+      <audio ref={audioRef} src={trackUrl} loop preload="none" />
+    </div>
+  );
+}
+
 export function App() {
-  return <div className="shell"><header><Link className="brand" to="/"><span aria-hidden="true">✿</span> mood garden</Link><nav aria-label="Điều hướng chính"><NavLink to="/" end>Hôm nay</NavLink>{sections.map(s => <NavLink key={s.path} to={'/' + s.path}>{s.title}</NavLink>)}<AccountLink /></nav></header><main><Routes><Route path="/" element={<Home />} /><Route path="/login" element={<AuthPage key="login" mode="login" />} /><Route path="/register" element={<AuthPage key="register" mode="register" />} /><Route element={<RequireAuth />}><Route path="/profile" element={<ProfilePage />} /><Route path="/moods" element={<MoodPage />} /><Route path="/garden" element={<GardenPage />} /><Route path="/wardrobe" element={<WardrobePage />} /><Route path="/outfits" element={<Placeholder {...sections[3]} />} /></Route><Route path="*" element={<section className="placeholder"><h1>Không tìm thấy trang</h1><Link className="button" to="/">Về trang hôm nay</Link></section>} /></Routes></main><footer><span>Mood Garden <em>How you feel, what you wear, how your garden grows.</em></span><span>Thiết kế và phát triển bởi <a href="https://www.instagram.com/trinhbinhduong_/" target="_blank" rel="noreferrer">emsidt</a></span></footer></div>;
+  return <div className="shell"><header><Link className="brand" to="/"><span aria-hidden="true">✿</span> mood garden</Link><nav aria-label="Điều hướng chính"><NavLink to="/" end>Hôm nay</NavLink>{sections.map(s => <NavLink key={s.path} to={'/' + s.path}>{s.title}</NavLink>)}<SoundscapePlayer /><AccountLink /></nav></header><main><Routes><Route path="/" element={<Home />} /><Route path="/login" element={<AuthPage key="login" mode="login" />} /><Route path="/register" element={<AuthPage key="register" mode="register" />} /><Route element={<RequireAuth />}><Route path="/profile" element={<ProfilePage />} /><Route path="/moods" element={<MoodPage />} /><Route path="/garden" element={<GardenPage />} /><Route path="/wardrobe" element={<WardrobePage />} /><Route path="/outfits" element={<Placeholder {...sections[3]} />} /></Route><Route path="*" element={<section className="placeholder"><h1>Không tìm thấy trang</h1><Link className="button" to="/">Về trang hôm nay</Link></section>} /></Routes></main><footer><span>Mood Garden <em>How you feel, what you wear, how your garden grows.</em></span><span>Thiết kế và phát triển bởi <a href="https://www.instagram.com/trinhbinhduong_/" target="_blank" rel="noreferrer">emsidt</a></span></footer></div>;
 }

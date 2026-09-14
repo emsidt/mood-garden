@@ -157,7 +157,7 @@ footer { border-top: 1px solid #dde2d7; padding: 24px 0; display: flex; justify-
 .quest-button { background: #fce8b2; color: #806600; padding: 8px 16px; font-size: 13px; font-weight: 600; }
 .quest-button:disabled { background: #fdf6e3; color: #b39f4d; cursor: not-allowed; }
 
-.garden-controls { display: flex; gap: 12px; margin-bottom: 16px; }
+.garden-controls { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; }
 .shop-button { background: #e6f6eb; color: #2e603a; font-size: 14px; padding: 10px 16px; font-weight: 600; }
 .soundscape-player { cursor: pointer; background: #f4f6f0; border: 1px solid #dce5d5; padding: 10px 16px; border-radius: 99px; font-size: 14px; color: #63705f; font-weight: 600; transition: all 0.2s; }
 .soundscape-player.playing { background: #e6f6eb; color: #2e603a; border-color: #86efac; }

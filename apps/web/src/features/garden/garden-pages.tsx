@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import React, { FormEvent, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, errorMessage } from '../../lib/api';
 
@@ -202,11 +202,30 @@ function GardenStore({ garden, client }: { garden: Garden, client: any }) {
 
 function SoundscapePlayer() {
   const [playing, setPlaying] = useState(false);
-  // MVP: just a visual toggle for now, in a real app this would play an Audio element
+  const audioRef = React.useRef<HTMLAudioElement>(null);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (playing) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play().catch(e => console.error("Audio play failed", e));
+    }
+    setPlaying(!playing);
+  };
+
   return (
-    <div className={`soundscape-player ${playing ? 'playing' : ''}`} onClick={() => setPlaying(!playing)}>
-      <span>{playing ? '🎵 Đang phát: Lofi Chill' : '🔇 Bật nhạc thư giãn'}</span>
-    </div>
+    <>
+      <button className={`button soundscape-player ${playing ? 'playing' : ''}`} onClick={togglePlay}>
+        <span>{playing ? '🎵 Đang phát: Lofi Chill' : '🔇 Bật nhạc thư giãn'}</span>
+      </button>
+      <audio 
+        ref={audioRef} 
+        src="https://cdn.pixabay.com/audio/2022/05/27/audio_1808fbf07a.mp3" 
+        loop 
+        preload="none"
+      />
+    </>
   );
 }
 

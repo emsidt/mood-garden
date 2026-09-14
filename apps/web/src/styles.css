@@ -32,8 +32,16 @@ header { min-height: 108px; display: flex; align-items: center; justify-content:
 .brand { font-size: 25px; font-weight: 650; letter-spacing: -1px; white-space: nowrap; }
 .brand span { color: #769565; font-size: 36px; vertical-align: middle; margin-right: 8px; }
 nav { display: flex; flex-wrap: wrap; gap: 24px; font-size: 14px; }
-nav a { padding: 8px 0; color: #657363; }
-nav a.active { color: #304637; border-bottom: 2px solid #769565; }
+nav { display: flex; gap: 32px; font-weight: 500; font-size: 15px; align-items: center; }
+nav a { color: #63705f; text-decoration: none; position: relative; padding: 4px 0; transition: color .2s; }
+nav a:hover { color: #1e3323; }
+nav a.active { color: #2e603a; font-weight: 600; }
+nav a.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: #8aae7a; border-radius: 2px; }
+
+.global-player { display: flex; align-items: center; margin-left: auto; border-left: 1px solid #dce5d5; padding-left: 24px; }
+.global-player .soundscape-player { background: transparent; border: none; padding: 0; font-size: 20px; cursor: pointer; color: #63705f; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.global-player .soundscape-player:hover { background: #e2e8db; transform: scale(1.1); }
+.global-player .soundscape-player.playing { color: #2e603a; background: #e6f6eb; }
 .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 55px; align-items: center; padding: 64px 0; }
 .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: #64765d; }
 h1 { font-family: "Lora", Cambria, serif; font-weight: 400; font-size: clamp(38px, 4.7vw, 59px); line-height: 1.18; letter-spacing: -.5px; margin: 20px 0; }

@@ -101,16 +101,16 @@ export function MoodPage() {
 }
 function CheckedIn({ entry }: { entry: MoodEntry }) {
   const client = useQueryClient();
-  const [questDone, setQuestDone] = useState(entry.questCompleted ?? false);
   const [questBusy, setQuestBusy] = useState(false);
   const mood = moodByValue[entry.mood];
+  const questDone = entry.questCompleted ?? false;
   
   async function completeQuest() {
     setQuestBusy(true);
     try {
       await api.post('/moods/quest-complete');
-      setQuestDone(true);
       void client.invalidateQueries({ queryKey: ['garden'] });
+      void client.invalidateQueries({ queryKey: ['mood-today'] });
     } catch (e) {
       // ignore
     } finally {

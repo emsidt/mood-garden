@@ -6,11 +6,18 @@ import { MoodAnalytics } from './mood-analytics';
 
 export type Mood = 'HAPPY' | 'CALM' | 'EXCITED' | 'TIRED' | 'SAD' | 'STRESSED';
 export type MoodEntry = { id: string; mood: Mood; note: string | null; entryDate: string; createdAt: string };
+type PurchasedDecor = { id: string; decorId: string };
+type DecorCatalogItem = { id: string; name: string; icon: string; price: number; description: string };
 type Garden = {
-  level: number; experience: number; theme: string; streak: { current: number; longest: number };
+  level: number; experience: number; seeds: number; theme: string; streak: { current: number; longest: number };
   progress: { current: number; target: number; nextLevelAt: number };
   unlocked: Array<{ level: number; name: string; icon: string; description: string }>;
   nextUnlock: { level: number; name: string; icon: string; description: string } | null;
+  decor: PurchasedDecor[];
+};
+type Catalog = {
+  unlocks: Array<{ level: number; name: string; icon: string; description: string }>;
+  decor: DecorCatalogItem[];
 };
 type CurrentWeather = {
   city: string; temperature: number; feelsLike: number; condition: string; conditionText: string;
@@ -38,6 +45,15 @@ const DAILY_QUOTES = [
   "Sự bình tĩnh là siêu năng lực của bạn trong một thế giới vội vã.",
   "Nụ cười của bạn là ánh nắng xua tan muộn phiền của chính mình."
 ];
+
+const QUESTS: Record<Mood, string> = {
+  HAPPY: "Lan tỏa niềm vui: Hãy gửi một tin nhắn hỏi thăm người thân.",
+  CALM: "Giữ vững nhịp điệu: Uống một cốc nước ấm và nhắm mắt 2 phút.",
+  EXCITED: "Tận dụng năng lượng: Ghi ra 3 điều bạn muốn làm nhất hôm nay.",
+  TIRED: "Nghỉ ngơi: Đi ngủ sớm hơn 30 phút tối nay nhé.",
+  SAD: "Chữa lành: Nghe một bản nhạc không lời bạn yêu thích.",
+  STRESSED: "Giải tỏa: Hít thở sâu 5 lần và thả lỏng vai của bạn."
+};
 
 export function MoodPage() {
   const client = useQueryClient();
@@ -68,7 +84,7 @@ export function MoodPage() {
     <h1>Hôm nay bạn<br />thấy thế nào?</h1>
     <div className="daily-quote">
       <span className="quote-icon">❝</span>
-      <p>{dailyQuote}</p>
+      <p>{dailyQuote}<span className="quote-icon-close">❞</span></p>
     </div>
     {entry ? <CheckedIn entry={entry} /> : <form onSubmit={submit}>
       <div className="mood-options">{moods.map(item => <button type="button" key={item.value} className={'mood-option ' + (chosen === item.value ? 'selected' : '')} onClick={() => { setChosen(item.value); setError(''); }}>
@@ -84,8 +100,50 @@ export function MoodPage() {
   </section>;
 }
 function CheckedIn({ entry }: { entry: MoodEntry }) {
+  const client = useQueryClient();
+  const [questDone, setQuestDone] = useState(false);
+  const [questBusy, setQuestBusy] = useState(false);
   const mood = moodByValue[entry.mood];
-  return <div className="checked-in"><span>{mood.icon}</span><div><h2>Bạn đã chọn {mood.label.toLowerCase()} hôm nay.</h2><p>{entry.note || mood.text}</p><small>Một check-in đã giúp khu vườn của bạn thêm 25 XP.</small></div></div>;
+  
+  async function completeQuest() {
+    setQuestBusy(true);
+    try {
+      await api.post('/moods/quest-complete');
+      setQuestDone(true);
+      void client.invalidateQueries({ queryKey: ['garden'] });
+    } catch (e) {
+      // ignore
+    } finally {
+      setQuestBusy(false);
+    }
+  }
+
+  return (
+    <div className="checked-in-container">
+      <div className="checked-in">
+        <span>{mood.icon}</span>
+        <div>
+          <h2>Bạn đã chọn {mood.label.toLowerCase()} hôm nay.</h2>
+          <p>{entry.note || mood.text}</p>
+          <small>Một check-in đã giúp khu vườn của bạn thêm 25 XP và 10 Hạt giống.</small>
+        </div>
+      </div>
+      <div className="healing-quest">
+        <div className="quest-header">
+          <span className="quest-icon">📜</span>
+          <strong>Nhiệm vụ nhỏ hôm nay</strong>
+        </div>
+        <p>{QUESTS[entry.mood]}</p>
+        <button 
+          className="button quest-button" 
+          disabled={questDone || questBusy} 
+          onClick={completeQuest}
+        >
+          {questDone ? 'Đã hoàn thành (+15 XP, +10 Hạt giống)' : questBusy ? 'Đang xác nhận...' : 'Đánh dấu hoàn thành'}
+        </button>
+      </div>
+    </div>
+  );
 }
 function MoodHistory({ entries }: { entries: MoodEntry[] }) {
   if (!entries.length) return null;
@@ -94,8 +152,69 @@ function MoodHistory({ entries }: { entries: MoodEntry[] }) {
     return <article key={entry.id}><span>{mood.icon}</span><div><strong>{mood.label}</strong><p>{entry.note || mood.text}</p></div><time>{new Date(entry.entryDate).toLocaleDateString('vi-VN', { day: '2-digit', month: 'short' })}</time></article>;
   })}</div></section>;
 }
+
+function GardenStore({ garden, client }: { garden: Garden, client: any }) {
+  const [open, setOpen] = useState(false);
+  const catalog = useQuery({ queryKey: ['garden-catalog'], queryFn: async () => (await api.get<Catalog>('/garden/catalog')).data });
+  const [buying, setBuying] = useState<string | null>(null);
+
+  if (!open) return <button className="button shop-button" onClick={() => setOpen(true)}>🏪 Cửa hàng</button>;
+  
+  return <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setOpen(false)}>
+    <div className="modal shop-modal">
+      <div className="shop-header">
+        <h2>Cửa hàng Trang trí</h2>
+        <button className="close-btn" onClick={() => setOpen(false)}>✕</button>
+      </div>
+      <p className="shop-balance">Bạn đang có: <strong>{garden.seeds} Hạt giống 🌾</strong></p>
+      {catalog.isPending ? <p>Đang tải...</p> : <div className="shop-items">
+        {catalog.data?.decor.map(item => {
+          const owned = garden.decor?.some(d => d.decorId === item.id);
+          return <article key={item.id} className={owned ? 'owned' : ''}>
+            <span className="item-icon">{item.icon}</span>
+            <div className="item-info">
+              <strong>{item.name}</strong>
+              <p>{item.description}</p>
+            </div>
+            <button 
+              className="button button-small"
+              disabled={owned || buying === item.id || garden.seeds < item.price}
+              onClick={async () => {
+                setBuying(item.id);
+                try {
+                  await api.post('/garden/store/buy', { decorId: item.id });
+                  void client.invalidateQueries({ queryKey: ['garden'] });
+                } catch (e) {
+                  alert(errorMessage(e));
+                } finally {
+                  setBuying(null);
+                }
+              }}
+            >
+              {owned ? 'Đã sở hữu' : buying === item.id ? '...' : `${item.price} Hạt`}
+            </button>
+          </article>;
+        })}
+      </div>}
+    </div>
+  </div>;
+}
+
+function SoundscapePlayer() {
+  const [playing, setPlaying] = useState(false);
+  // MVP: just a visual toggle for now, in a real app this would play an Audio element
+  return (
+    <div className={`soundscape-player ${playing ? 'playing' : ''}`} onClick={() => setPlaying(!playing)}>
+      <span>{playing ? '🎵 Đang phát: Lofi Chill' : '🔇 Bật nhạc thư giãn'}</span>
+    </div>
+  );
+}
+
 export function GardenPage() {
+  const client = useQueryClient();
   const garden = useQuery({ queryKey: ['garden'], queryFn: async () => (await api.get<Garden>('/garden')).data });
+  const catalog = useQuery({ queryKey: ['garden-catalog'], queryFn: async () => (await api.get<Catalog>('/garden/catalog')).data });
+
   const weather = useQuery({
     queryKey: ['weather-current', 'v3'],
     queryFn: async () => (await api.get<CurrentWeather>('/weather/current?client=v3')).data,
@@ -116,8 +235,28 @@ export function GardenPage() {
   const percent = Math.max(0, Math.min(100, Math.round(data.progress.current / data.progress.target * 100)));
   const weatherClass = weather.data?.rain ? 'weather-rain' : weather.data && weather.data.condition !== 'CLEAR' ? 'weather-cloudy' : '';
   return <section className="garden-page">
-    <p className="eyebrow">KHU VƯỜN CỦA BẠN</p><div className="section-heading"><div><h1>Đang lớn lên<br />từng chút một.</h1><p className="garden-subtitle">Mỗi lần bạn lắng nghe mình, khu vườn lại có thêm sức sống.</p></div><div className="garden-level"><span>Cấp độ</span><strong>{data.level}</strong></div></div>
-    <div className={'garden-scene ' + weatherClass} aria-label={'Khu vườn cấp ' + data.level}><span className="scene-sun" /><span className="scene-cloud cloud-one">☁</span><span className="scene-cloud cloud-two">☁</span><span className="scene-hill hill-far" /><span className="scene-hill hill-near" />{data.unlocked.map((item, index) => <span key={item.name} className={'scene-plant plant-' + index} title={item.name}>{item.icon}</span>)}<div className="rain-container">{rainDrops.map(d => <span key={d.id} className="rain-drop" style={{ left: d.left + '%', height: d.height + 'px', animationDelay: d.delay + 's', animationDuration: d.duration + 's' }} />)}</div><span className="scene-message">Cứ lớn lên theo nhịp của bạn.</span></div>
+    <p className="eyebrow">KHU VƯỜN CỦA BẠN</p><div className="section-heading"><div><h1>Đang lớn lên<br />từng chút một.</h1><p className="garden-subtitle">Mỗi lần bạn lắng nghe mình, khu vườn lại có thêm sức sống.</p></div><div className="garden-level"><span>Cấp độ</span><strong>{data.level}</strong><br/><small>{data.seeds} Hạt giống</small></div></div>
+    
+    <div className="garden-controls">
+      <GardenStore garden={data} client={client} />
+      <SoundscapePlayer />
+    </div>
+
+    <div className={'garden-scene ' + weatherClass} aria-label={'Khu vườn cấp ' + data.level}>
+      <span className="scene-sun" />
+      <span className="scene-cloud cloud-one">☁</span>
+      <span className="scene-cloud cloud-two">☁</span>
+      <span className="scene-hill hill-far" />
+      <span className="scene-hill hill-near" />
+      {data.unlocked.map((item, index) => <span key={item.name} className={'scene-plant plant-' + index} title={item.name}>{item.icon}</span>)}
+      {data.decor?.map((d) => {
+        const catItem = catalog.data?.decor.find(c => c.id === d.decorId);
+        if (!catItem) return null;
+        return <span key={d.id} className={`scene-decor decor-${d.decorId}`} title={catItem.name}>{catItem.icon}</span>;
+      })}
+      <div className="rain-container">{rainDrops.map(d => <span key={d.id} className="rain-drop" style={{ left: d.left + '%', height: d.height + 'px', animationDelay: d.delay + 's', animationDuration: d.duration + 's' }} />)}</div>
+      <span className="scene-message">Cứ lớn lên theo nhịp của bạn.</span>
+    </div>
     {weather.data ? <><section className="weather-card"><span className="weather-icon">{weather.data.rain ? '🌧️' : weather.data.condition === 'CLEAR' ? '☀️' : '☁️'}</span><div><p className="eyebrow">THỜI TIẾT Ở {weather.data.city.toUpperCase()}</p><strong>{Math.round(weather.data.temperature)}°</strong><span>{weather.data.conditionText} · Cảm giác {Math.round(weather.data.feelsLike)}°</span></div><div className="weather-details"><span>💧 {weather.data.humidity}%</span><span>🍃 {Math.round(weather.data.windSpeed)} km/h</span><span>☀️ UV {weather.data.uvIndex}</span></div></section><p className="weather-credit">Dữ liệu thời tiết bởi <a href="https://www.weatherapi.com/" target="_blank" rel="noreferrer">WeatherAPI.com</a></p></> : weather.isPending ? <p className="weather-loading" role="status">Đang lấy thời tiết theo thành phố của bạn…</p> : weather.isError ? <p className="weather-unavailable">{errorMessage(weather.error)} <button onClick={() => { void weather.refetch(); }}>Thử lại</button></p> : null}
     <div className="garden-stats"><article><span>🔥</span><div><strong>{data.streak.current} ngày</strong><p>Chuỗi hiện tại</p></div></article><article><span>✦</span><div><strong>{data.experience} XP</strong><p>Kinh nghiệm đã tích lũy</p></div></article><article><span>🌿</span><div><strong>{data.streak.longest} ngày</strong><p>Chuỗi dài nhất</p></div></article></div>
     <section className="garden-progress"><div><h2>Tiến độ cấp {data.level}</h2><span>{data.progress.current} / {data.progress.target} XP</span></div><div className="progress-track"><i style={{ width: percent + '%' }} /></div><p>{data.nextUnlock ? <>Còn {Math.max(0, data.progress.nextLevelAt - data.experience)} XP để mở khóa <strong>{data.nextUnlock.icon} {data.nextUnlock.name}</strong>.</> : 'Bạn đã mở khóa tất cả cây trong khu vườn.'}</p></section>

@@ -10,4 +10,5 @@ export class MoodsController {
   @Get('history') @Header('Cache-Control', 'no-store') history(@Req() req: AuthRequest) { return this.moods.history(req.user.id); }
   @Get('statistics') @Header('Cache-Control', 'no-store') statistics(@Req() req: AuthRequest) { return this.moods.statistics(req.user.id); }
   @Post() create(@Req() req: AuthRequest, @Body() dto: CreateMoodDto) { return this.moods.create(req.user.id, dto); }
+  @Post('quest-complete') questComplete(@Req() req: AuthRequest) { return this.moods.completeQuest(req.user.id); }
 }

@@ -3,6 +3,7 @@ import { Prisma, Mood } from '../generated/prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMoodDto } from './dto/create-mood.dto';
 const XP_PER_CHECK_IN = 25;
+const SEEDS_PER_CHECK_IN = 10;
 function dateInTimezone(timezone: string) {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: timezone, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
   const part = (type: string) => parts.find(item => item.type === type)!.value;
@@ -33,7 +34,7 @@ export class MoodsService {
         const streak = await tx.moodStreak.findUniqueOrThrow({ where: { userId } });
         const currentStreak = streak.lastCheckInDate?.getTime() === previousDay(entryDate).getTime() ? streak.currentStreak + 1 : 1;
         const updatedStreak = await tx.moodStreak.update({ where: { userId }, data: { currentStreak, longestStreak: Math.max(streak.longestStreak, currentStreak), lastCheckInDate: entryDate } });
-        const garden = await tx.garden.update({ where: { userId }, data: { experience: { increment: XP_PER_CHECK_IN } } });
+        const garden = await tx.garden.update({ where: { userId }, data: { experience: { increment: XP_PER_CHECK_IN }, seeds: { increment: SEEDS_PER_CHECK_IN } } });
         const level = levelFor(garden.experience);
         const updatedGarden = level !== garden.level ? await tx.garden.update({ where: { userId }, data: { level } }) : garden;
         return { entry, streak: updatedStreak, garden: updatedGarden, gainedExperience: XP_PER_CHECK_IN, leveledUp: level > garden.level };
@@ -42,5 +43,13 @@ export class MoodsService {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictException('Bạn đã ghi lại cảm xúc cho hôm nay rồi.');
       throw error;
     }
+  }
+  async completeQuest(userId: string) {
+    return this.prisma.$transaction(async tx => {
+      const garden = await tx.garden.update({ where: { userId }, data: { experience: { increment: 15 }, seeds: { increment: 10 } } });
+      const level = levelFor(garden.experience);
+      const updatedGarden = level !== garden.level ? await tx.garden.update({ where: { userId }, data: { level } }) : garden;
+      return { garden: updatedGarden, gainedExperience: 15, gainedSeeds: 10, leveledUp: level > garden.level };
+    });
   }
 }

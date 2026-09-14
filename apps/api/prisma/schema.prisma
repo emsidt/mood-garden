@@ -114,11 +114,13 @@ model Garden {
   userId String @unique @map("user_id") @db.Uuid
   level Int @default(1)
   experience Int @default(0)
+  seeds Int @default(0)
   theme String @default("meadow")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   items GardenItem[]
+  decor PurchasedDecor[]
   @@map("gardens")
 }
 
@@ -144,6 +146,16 @@ model GardenItem {
   @@index([gardenId])
   @@index([plantId])
   @@map("garden_items")
+}
+
+model PurchasedDecor {
+  id String @id @default(uuid()) @db.Uuid
+  gardenId String @map("garden_id") @db.Uuid
+  decorId String @map("decor_id")
+  purchasedAt DateTime @default(now()) @map("purchased_at")
+  garden Garden @relation(fields: [gardenId], references: [id], onDelete: Cascade)
+  @@index([gardenId])
+  @@map("purchased_decor")
 }
 
 model WardrobeItem {
